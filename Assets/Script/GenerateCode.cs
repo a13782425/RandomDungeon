@@ -36,8 +36,8 @@ public class GenerateCode : MonoBehaviour
             {
                 CellModel model = new CellModel();
                 model.Obj = GameObject.Instantiate(Prefab);
-                model.Width = x;
-                model.Height = y;
+                model.X = x;
+                model.Y = y;
                 if (x == 0 || x == CellWidth - 1 || y == 0 || y == CellHeight - 1)
                 {
                     model.BlockType = BlockTypeEnum.Bound;
@@ -70,13 +70,16 @@ public class GenerateCode : MonoBehaviour
     {
 
         GenerateRoom();
-
-        GenerateLine();
         _startX = 1;
         _startY = 1;
         _startList.Clear();
         _lastMazeDir = Dir.None;
+        GenerateLine();
+
+        GenerateConnectors();
     }
+
+
 
     private int _startX, _startY;
 
@@ -106,7 +109,7 @@ public class GenerateCode : MonoBehaviour
             }
         }
         SetType(_startX, _startY, BlockTypeEnum.Floor, FloorColor);
-        _startList.Add(new CellModel() { Width = _startX, Height = _startY });
+        _startList.Add(new CellModel() { X = _startX, Y = _startY });
         #endregion
 
         while (_startList.Count > 0)
@@ -117,33 +120,33 @@ public class GenerateCode : MonoBehaviour
             List<Dir> openDirs = new List<Dir>();
 
             //左
-            if (InBounds(cell.Width - 3, cell.Height))
+            if (InBounds(cell.X - 3, cell.Y))
             {
-                if (cells[cell.Width - 2, cell.Height].BlockType == BlockTypeEnum.Unused)
+                if (cells[cell.X - 2, cell.Y].BlockType == BlockTypeEnum.Unused)
                 {
                     openDirs.Add(Dir.Left);
                 }
             }
             //右
-            if (InBounds(cell.Width + 3, cell.Height))
+            if (InBounds(cell.X + 3, cell.Y))
             {
-                if (cells[cell.Width + 2, cell.Height].BlockType == BlockTypeEnum.Unused)
+                if (cells[cell.X + 2, cell.Y].BlockType == BlockTypeEnum.Unused)
                 {
                     openDirs.Add(Dir.Right);
                 }
             }
             //上
-            if (InBounds(cell.Width, cell.Height + 3))
+            if (InBounds(cell.X, cell.Y + 3))
             {
-                if (cells[cell.Width, cell.Height + 2].BlockType == BlockTypeEnum.Unused)
+                if (cells[cell.X, cell.Y + 2].BlockType == BlockTypeEnum.Unused)
                 {
                     openDirs.Add(Dir.Up);
                 }
             }
             //下
-            if (InBounds(cell.Width, cell.Height - 3))
+            if (InBounds(cell.X, cell.Y - 3))
             {
-                if (cells[cell.Width, cell.Height - 2].BlockType == BlockTypeEnum.Unused)
+                if (cells[cell.X, cell.Y - 2].BlockType == BlockTypeEnum.Unused)
                 {
                     openDirs.Add(Dir.Down);
                 }
@@ -170,24 +173,24 @@ public class GenerateCode : MonoBehaviour
             switch (dir)
             {
                 case Dir.Up:
-                    _startList.Add(new CellModel() { Width = cell.Width, Height = cell.Height + 2 });
-                    SetType(cell.Width, cell.Height + 1, BlockTypeEnum.Floor, FloorColor);
-                    SetType(cell.Width, cell.Height + 2, BlockTypeEnum.Floor, FloorColor);
+                    _startList.Add(new CellModel() { X = cell.X, Y = cell.Y + 2 });
+                    SetType(cell.X, cell.Y + 1, BlockTypeEnum.Floor, FloorColor);
+                    SetType(cell.X, cell.Y + 2, BlockTypeEnum.Floor, FloorColor);
                     break;
                 case Dir.Down:
-                    _startList.Add(new CellModel() { Width = cell.Width, Height = cell.Height - 2 });
-                    SetType(cell.Width, cell.Height - 1, BlockTypeEnum.Floor, FloorColor);
-                    SetType(cell.Width, cell.Height - 2, BlockTypeEnum.Floor, FloorColor);
+                    _startList.Add(new CellModel() { X = cell.X, Y = cell.Y - 2 });
+                    SetType(cell.X, cell.Y - 1, BlockTypeEnum.Floor, FloorColor);
+                    SetType(cell.X, cell.Y - 2, BlockTypeEnum.Floor, FloorColor);
                     break;
                 case Dir.Left:
-                    _startList.Add(new CellModel() { Width = cell.Width - 2, Height = cell.Height });
-                    SetType(cell.Width - 1, cell.Height, BlockTypeEnum.Floor, FloorColor);
-                    SetType(cell.Width - 2, cell.Height, BlockTypeEnum.Floor, FloorColor);
+                    _startList.Add(new CellModel() { X = cell.X - 2, Y = cell.Y });
+                    SetType(cell.X - 1, cell.Y, BlockTypeEnum.Floor, FloorColor);
+                    SetType(cell.X - 2, cell.Y, BlockTypeEnum.Floor, FloorColor);
                     break;
                 case Dir.Right:
-                    _startList.Add(new CellModel() { Width = cell.Width + 2, Height = cell.Height });
-                    SetType(cell.Width + 1, cell.Height, BlockTypeEnum.Floor, FloorColor);
-                    SetType(cell.Width + 2, cell.Height, BlockTypeEnum.Floor, FloorColor);
+                    _startList.Add(new CellModel() { X = cell.X + 2, Y = cell.Y });
+                    SetType(cell.X + 1, cell.Y, BlockTypeEnum.Floor, FloorColor);
+                    SetType(cell.X + 2, cell.Y, BlockTypeEnum.Floor, FloorColor);
                     break;
             }
 
@@ -651,5 +654,81 @@ public class GenerateCode : MonoBehaviour
                 }
             }
         }
+    }
+
+    private List<Point> GetRegionsTouching(int x, int y)
+    {
+        List<Point> temp = new List<Point>();
+        //左
+        if (InBounds(x - 1, y))
+        {
+            if (cells[x - 1, y].BlockType == BlockTypeEnum.Floor)//|| cells[x - 1, y].BlockType == BlockTypeEnum.RoomFloor)
+            {
+                temp.Add(new Point() { X = x - 1, Y = y });
+            }
+        }
+        //右
+        if (InBounds(x + 1, y))
+        {
+            if (cells[x + 1, y].BlockType == BlockTypeEnum.Floor)// || cells[x + 1, y].BlockType == BlockTypeEnum.RoomFloor)
+            {
+                temp.Add(new Point() { X = x + 1, Y = y });
+            }
+        }
+        //上
+        if (InBounds(x, y + 1))
+        {
+            if (cells[x, y + 1].BlockType == BlockTypeEnum.Floor)//|| cells[x, y + 1].BlockType == BlockTypeEnum.RoomFloor)
+            {
+                temp.Add(new Point() { X = x, Y = y + 1 });
+            }
+        }
+        //下
+        if (InBounds(x, y - 1))
+        {
+            if (cells[x, y - 1].BlockType == BlockTypeEnum.Floor)// || cells[x, y - 1].BlockType == BlockTypeEnum.RoomFloor)
+            {
+                temp.Add(new Point() { X = x, Y = y - 1 });
+            }
+        }
+
+        // for (var dir in Direction.CARDINAL)
+        //{
+        //    var region = _floors[pos + dir];
+        //    if (region != CELL_SOLID) regions.add(region);
+        //}
+
+
+        return temp;
+    }
+
+
+    private void GenerateConnectors()
+    {
+        for (int i = 1; i < CellWidth - 1; i++)
+        {
+            for (int j = 1; j < CellHeight - 1; j++)
+            {
+                if (cells[i, j].BlockType == BlockTypeEnum.RoomWall)
+                {
+                    List<Point> tempList = GetRegionsTouching(i, j);
+                    foreach (Point item in tempList)
+                    {
+                        SetType(item.X, item.Y, BlockTypeEnum.Door, Color.blue);
+                    }
+
+                }
+            }
+        }
+        //for (var pos in _floors.bounds.inflate(-1))
+        // {
+        //     // Can't already be part of a region.
+        //     if (_floors[pos] > CELL_SOLID) continue;
+
+        //     var regions = _getRegionsTouching(pos);
+        //     if (regions.length < 2) continue;
+
+        //     _connectors.add(pos);
+        // }
     }
 }

@@ -33,8 +33,8 @@ public class Point
 
 public class CellModel
 {
-    public int Width;
-    public int Height;
+    public int X;
+    public int Y;
     public GameObject Obj;
     public BlockTypeEnum BlockType;
 }
